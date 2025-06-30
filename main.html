@@ -1,0 +1,469 @@
+<!DOCTYPE html>
+<html lang="ja" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CLASSROOMS: 不登校支援インタラクティブ・ビジョン</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <!-- Chosen Palette: Calm Sanctuary -->
+    <!-- Application Structure Plan: このSPAは、ユーザーを物語の旅へと導く垂直スクロール形式のナラティブ構造を採用します。まず導入部で問題の重大性を提示し、次にインタラクティブなデータで現状を深く掘り下げます。中核部では「認識のギャップ」という課題の本質を明らかにし、それに対する解決策として「CLASSROOMS」の各機能を対話的に紹介します。この構造は、単なる情報の羅列ではなく、ユーザーが課題を「自分ごと」として捉え、解決策の必要性を感情的・論理的に理解することを目的としています。直線的ながらも発見のあるユーザーフローにより、複雑なテーマへのエンゲージメントを最大化します。 -->
+    <!-- Visualization & Content Choices: 報告書の情報を効果的に伝達するため、多様な表示方法を組み合わせます。【課題の規模（変化の提示）】→ Chart.jsの折れ線グラフで不登校生徒数の10年間の推移を視覚化。【原因の分析（比較と関係性の提示）】→ 教師と生徒の認識ギャップを、同じグラフ上でデータを切り替え表示するインタラクティブな棒グラフで表現。これにより、両者の視点の違いを劇的に示します。【ソリューションの紹介（整理と探求）】→ HTML/CSS/JSによるアコーディオンUIを採用。ユーザーが能動的に情報を開示することで、認知負荷を下げつつ、各機能への理解を深めます。すべての要素は、ユーザーの探求心を刺激し、課題の本質への理解を促すよう設計されています。 -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+    <style>
+        body {
+            font-family: 'Noto Sans JP', sans-serif;
+            background-color: #FDFCFB;
+            color: #4B4B4B;
+        }
+        .chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 700px;
+            margin-left: auto;
+            margin-right: auto;
+            height: 300px;
+            max-height: 400px;
+        }
+        @media (min-width: 640px) {
+            .chart-container {
+                height: 400px;
+            }
+        }
+        .section-title {
+            font-size: 2.25rem;
+            font-weight: 700;
+            line-height: 1.3;
+            text-align: center;
+            margin-bottom: 1rem;
+        }
+        .section-subtitle {
+            font-size: 1.125rem;
+            text-align: center;
+            max-width: 60ch;
+            margin: 0 auto 3rem auto;
+            color: #6B7280;
+        }
+        .nav-link {
+            transition: color 0.3s, border-color 0.3s;
+            border-bottom: 2px solid transparent;
+        }
+        .nav-link:hover, .nav-link.active {
+            color: #3B82F6;
+            border-bottom-color: #3B82F6;
+        }
+        .fade-in {
+            opacity: 0;
+            transform: translateY(20px);
+            transition: opacity 0.6s ease-out, transform 0.6s ease-out;
+        }
+        .fade-in.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+        .stat-card {
+            background-color: #FFFFFF;
+            border: 1px solid #F0F0F0;
+            border-radius: 12px;
+            padding: 1.5rem;
+            text-align: center;
+            box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.05), 0 2px 4px -2px rgb(0 0 0 / 0.05);
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+        .stat-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.07), 0 4px 6px -4px rgb(0 0 0 / 0.07);
+        }
+        .feature-accordion-button[aria-expanded="true"] {
+            background-color: #EFF6FF;
+            color: #1D4ED8;
+        }
+    </style>
+</head>
+<body class="antialiased">
+
+<header class="bg-white/80 backdrop-blur-md sticky top-0 z-50 shadow-sm">
+    <nav class="container mx-auto px-6 py-3">
+        <div class="flex justify-between items-center">
+            <div class="text-xl font-bold text-gray-800">CLASSROOMS</div>
+            <div class="hidden md:flex space-x-8">
+                <a href="#problem" class="nav-link">課題</a>
+                <a href="#reason" class="nav-link">原因</a>
+                <a href="#solution" class="nav-link">解決策</a>
+                <a href="#roadmap" class="nav-link">未来へ</a>
+            </div>
+        </div>
+    </nav>
+</header>
+
+<main>
+    <section id="hero" class="py-20 md:py-32 bg-stone-50">
+        <div class="container mx-auto px-6 text-center">
+            <h1 class="text-4xl md:text-6xl font-extrabold text-gray-800 leading-tight">
+                失われた「教室」を、<br class="md:hidden">すべての子どもたちへ。
+            </h1>
+            <p class="mt-6 max-w-2xl mx-auto text-lg md:text-xl text-gray-600">
+                AIと仮想空間が、学びと繋がりのための安全な聖域を創造する。
+                これは、不登校という社会課題に挑む、新しい教育のカタチです。
+            </p>
+            <a href="#problem" class="mt-10 inline-block bg-blue-500 text-white font-bold py-3 px-8 rounded-full text-lg hover:bg-blue-600 transition-colors">
+                課題を知る
+            </a>
+        </div>
+    </section>
+
+    <section id="problem" class="py-16 md:py-24">
+        <div class="container mx-auto px-6">
+            <h2 class="section-title fade-in">増え続ける、声なき声。</h2>
+            <p class="section-subtitle fade-in">
+                日本の小中学校における不登校は、過去10年間増加の一途をたどり、今や看過できない国家的課題となっています。統計データは、問題が量的に拡大し、質的に深刻化している現実を浮き彫りにします。
+            </p>
+
+            <div class="grid md:grid-cols-3 gap-6 md:gap-8 mb-12">
+                <div class="stat-card fade-in">
+                    <p class="text-4xl font-bold text-blue-600">299,048<span class="text-xl">人</span></p>
+                    <p class="mt-2 text-gray-600">令和4年度の小中不登校児童生徒数（過去最多）</p>
+                </div>
+                <div class="stat-card fade-in">
+                    <p class="text-4xl font-bold text-blue-600">+22.1<span class="text-xl">%</span></p>
+                    <p class="mt-2 text-gray-600">前年度からの増加率。急激な拡大を示す</p>
+                </div>
+                <div class="stat-card fade-in">
+                    <p class="text-4xl font-bold text-blue-600">10<span class="text-xl">年連続</span></p>
+                    <p class="mt-2 text-gray-600">不登校児童生徒数が増加。構造的な問題を示唆</p>
+                </div>
+            </div>
+
+            <div class="bg-white p-6 md:p-8 rounded-xl shadow-sm border border-gray-100 fade-in">
+                <h3 class="text-xl md:text-2xl font-bold text-center mb-4">不登校児童生徒数の推移</h3>
+                <div class="chart-container">
+                    <canvas id="truancyTrendChart"></canvas>
+                </div>
+                <p class="text-center text-sm text-gray-500 mt-4">出典：文部科学省 児童生徒の問題行動・不登校等生徒指導上の諸課題に関する調査結果</p>
+            </div>
+        </div>
+    </section>
+
+    <section id="reason" class="py-16 md:py-24 bg-stone-50">
+        <div class="container mx-auto px-6">
+            <h2 class="section-title fade-in">なぜ、学校へ行けないのか？</h2>
+            <p class="section-subtitle fade-in">
+                公式調査では「無気力・不安」が最多。しかし、子どもたちの声に耳を傾けると、そこには「人間関係の苦痛」という、より具体的で切実な理由が隠されています。この"認識のギャップ"こそが、問題解決を阻む大きな壁です。
+            </p>
+
+            <div class="bg-white p-6 md:p-8 rounded-xl shadow-sm border border-gray-100 fade-in">
+                <h3 class="text-xl md:text-2xl font-bold text-center mb-1">不登校の要因：大人と子どもの認識ギャップ</h3>
+                <p class="text-center text-sm text-gray-500 mb-6">下のボタンで視点を切り替え、認識の違いを確認してください。</p>
+                <div class="text-center mb-6">
+                    <div class="inline-flex rounded-md shadow-sm">
+                        <button id="view-teacher" class="px-4 py-2 text-sm font-medium bg-blue-500 text-white border border-blue-500 rounded-l-lg hover:bg-blue-600 focus:z-10 focus:ring-2 focus:ring-blue-500">
+                            教師が考える要因
+                        </button>
+                        <button id="view-student" class="px-4 py-2 text-sm font-medium bg-white text-gray-700 border-t border-b border-gray-200 hover:bg-gray-50 focus:z-10 focus:ring-2 focus:ring-blue-500">
+                            生徒が挙げる要因
+                        </button>
+                    </div>
+                </div>
+                <div class="chart-container">
+                    <canvas id="reasonGapChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section id="solution" class="py-16 md:py-24">
+        <div class="container mx-auto px-6">
+            <h2 class="section-title fade-in">解決策としての「CLASSROOMS」</h2>
+            <p class="section-subtitle fade-in">
+                「CLASSROOMS」は、単なる学習ツールではありません。心理的安全性を最優先に設計された、学びと繋がりのための仮想聖域です。子どもたちが自分らしさを取り戻し、次の一歩を踏み出すための力を育む場所を提供します。
+            </p>
+            <div class="max-w-3xl mx-auto space-y-4">
+                <div class="feature-accordion fade-in">
+                    <h3 id="feature1-heading">
+                        <button type="button" class="feature-accordion-button flex items-center justify-between w-full p-5 font-medium text-left text-gray-600 border border-gray-200 rounded-lg focus:ring-4 focus:ring-blue-200 hover:bg-blue-50 transition-colors" data-accordion-target="#feature1-body" aria-expanded="false" aria-controls="feature1-body">
+                            <span class="flex items-center"><span class="mr-3 text-xl">🏠</span> プライベート仮想教室</span>
+                            <svg data-accordion-icon class="w-6 h-6 shrink-0" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd"></path></svg>
+                        </button>
+                    </h3>
+                    <div id="feature1-body" class="hidden" aria-labelledby="feature1-heading">
+                        <div class="p-5 border border-t-0 border-gray-200 rounded-b-lg bg-gray-50">
+                            <p class="mb-2 text-gray-600">各生徒に、完全にプライベートでカスタマイズ可能な3D空間を提供。誰にも邪魔されない自分だけの「城」で、安心感とコントロール感覚を取り戻します。壁紙や家具を自由に配置し、自己表現の喜びを育みます。</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="feature-accordion fade-in">
+                    <h3 id="feature2-heading">
+                        <button type="button" class="feature-accordion-button flex items-center justify-between w-full p-5 font-medium text-left text-gray-600 border border-gray-200 rounded-lg focus:ring-4 focus:ring-blue-200 hover:bg-blue-50 transition-colors" data-accordion-target="#feature2-body" aria-expanded="false" aria-controls="feature2-body">
+                            <span class="flex items-center"><span class="mr-3 text-xl">🤖</span> AIメンター「Ai-Sensei」</span>
+                            <svg data-accordion-icon class="w-6 h-6 shrink-0" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd"></path></svg>
+                        </button>
+                    </h3>
+                    <div id="feature2-body" class="hidden" aria-labelledby="feature2-heading">
+                        <div class="p-5 border border-t-0 border-gray-200 rounded-b-lg bg-gray-50">
+                            <p class="mb-2 text-gray-600">GoogleのGeminiモデルを搭載したAIが、24時間365日、生徒に寄り添います。「それは大変だったね」と感情を肯定する共感的な対話者であり、個々のペースに合わせた学習チューターでもあります。決して批判しない、頼れるパートナーです。</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="feature-accordion fade-in">
+                    <h3 id="feature3-heading">
+                        <button type="button" class="feature-accordion-button flex items-center justify-between w-full p-5 font-medium text-left text-gray-600 border border-gray-200 rounded-lg focus:ring-4 focus:ring-blue-200 hover:bg-blue-50 transition-colors" data-accordion-target="#feature3-body" aria-expanded="false" aria-controls="feature3-body">
+                            <span class="flex items-center"><span class="mr-3 text-xl">💬</span> コミュニティ「ザ・ラウンジ」</span>
+                            <svg data-accordion-icon class="w-6 h-6 shrink-0" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd"></path></svg>
+                        </button>
+                    </h3>
+                    <div id="feature3-body" class="hidden" aria-labelledby="feature3-heading">
+                        <div class="p-5 border border-t-0 border-gray-200 rounded-b-lg bg-gray-50">
+                            <p class="mb-2 text-gray-600">アバターを介して参加できる、安全な共有空間。同じ趣味を持つ仲間とテキストチャットで交流できます。AIによるモデレーションと、顔出し不要のコミュニケーションで、安心して他者との繋がりを再構築できます。</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="feature-accordion fade-in">
+                    <h3 id="feature4-heading">
+                        <button type="button" class="feature-accordion-button flex items-center justify-between w-full p-5 font-medium text-left text-gray-600 border border-gray-200 rounded-lg focus:ring-4 focus:ring-blue-200 hover:bg-blue-50 transition-colors" data-accordion-target="#feature4-body" aria-expanded="false" aria-controls="feature4-body">
+                            <span class="flex items-center"><span class="mr-3 text-xl">🛡️</span> 保護者・学校連携ポータル</span>
+                            <svg data-accordion-icon class="w-6 h-6 shrink-0" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd"></path></svg>
+                        </button>
+                    </h3>
+                    <div id="feature4-body" class="hidden" aria-labelledby="feature4-heading">
+                        <div class="p-5 border border-t-0 border-gray-200 rounded-b-lg bg-gray-50">
+                            <p class="mb-2 text-gray-600">保護者や学校関係者向けの専用ポータル。プライバシーに配慮した学習活動レポートを自動生成し、「出席扱い制度」の利用を強力にサポート。保護者の不安を軽減し、社会との繋がりを維持します。</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section id="roadmap" class="py-16 md:py-24 bg-stone-50">
+        <div class="container mx-auto px-6">
+            <h2 class="section-title fade-in">未来への道筋</h2>
+            <p class="section-subtitle fade-in">
+                「CLASSROOMS」は、段階的な開発を通じて構想を現実にします。一人ひとりの生徒を救うことから始め、やがては教育の多様なあり方を社会に示すことを目指します。
+            </p>
+            <div class="max-w-4xl mx-auto">
+                <div class="relative">
+                    <div class="absolute left-1/2 -translate-x-1/2 w-1 h-full bg-blue-200 rounded-full"></div>
+                    <div class="space-y-12 relative">
+                        <div class="flex md:justify-end md:mr-8 relative fade-in">
+                            <div class="md:w-5/12 p-6 bg-white rounded-lg shadow-md border border-gray-100">
+                                <div class="text-blue-500 font-bold mb-2">フェーズ1：中核デモの構築（3ヶ月）</div>
+                                <h4 class="font-bold text-lg mb-2">シングルプレイヤー体験の確立</h4>
+                                <ul class="list-disc list-inside text-gray-600 text-sm space-y-1">
+                                    <li>カスタマイズ可能なプライベート仮想教室</li>
+                                    <li>基本的なアバターシステム</li>
+                                    <li>AIメンターのコア対話機能（テキスト）</li>
+                                    <li>基礎的な学習モジュールの実装</li>
+                                </ul>
+                            </div>
+                        </div>
+                        <div class="flex md:justify-start md:ml-8 relative fade-in">
+                            <div class="md:w-5/12 p-6 bg-white rounded-lg shadow-md border border-gray-100">
+                                <div class="text-blue-500 font-bold mb-2">フェーズ2：コミュニティ機能の実装（3ヶ月）</div>
+                                <h4 class="font-bold text-lg mb-2">繋がりと制度的連携</h4>
+                                <ul class="list-disc list-inside text-gray-600 text-sm space-y-1">
+                                    <li>共有空間「ザ・ラウンジ」とテキストチャット</li>
+                                    <li>アバター越しの音声チャット機能</li>
+                                    <li>保護者・学校連携ポータル</li>
+                                    <li>「出席扱い」レポート自動生成</li>
+                                </ul>
+                            </div>
+                        </div>
+                        <div class="flex md:justify-end md:mr-8 relative fade-in">
+                            <div class="md:w-5/12 p-6 bg-white rounded-lg shadow-md border border-gray-100">
+                                <div class="text-blue-500 font-bold mb-2">フェーズ3：パイロットプログラムの実施</div>
+                                <h4 class="font-bold text-lg mb-2">実証と改善</h4>
+                                <ul class="list-disc list-inside text-gray-600 text-sm space-y-1">
+                                    <li>実際のユーザーによるテスト運用</li>
+                                    <li>NPOや教育委員会との連携</li>
+                                    <li>フィードバックに基づく継続的な改善</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+</main>
+
+<footer class="bg-gray-800 text-white">
+    <div class="container mx-auto px-6 py-8 text-center">
+        <p class="text-2xl font-bold mb-2">CLASSROOMS</p>
+        <p class="text-gray-400">すべての子どもが、自分らしく成長できる未来へ。</p>
+        <p class="text-sm text-gray-500 mt-6">&copy; 2025 CLASSROOMS Vision Project. All Rights Reserved.</p>
+    </div>
+</footer>
+
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        const truancyData = {
+            labels: ['H25', 'H26', 'H27', 'H28', 'H29', 'H30', 'R1', 'R2', 'R3', 'R4'],
+            datasets: [{
+                label: '小中学校の不登校児童生徒数',
+                data: [119637, 122902, 126066, 134370, 144031, 164528, 181272, 196127, 244940, 299048],
+                borderColor: 'rgb(59, 130, 246)',
+                backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                fill: true,
+                tension: 0.3,
+            }]
+        };
+
+        new Chart(document.getElementById('truancyTrendChart'), {
+            type: 'line',
+            data: truancyData,
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    y: {
+                        beginAtZero: false,
+                        ticks: {
+                            callback: function(value) {
+                                return value / 10000 + '万人';
+                            }
+                        }
+                    }
+                },
+                plugins: {
+                    legend: {
+                        display: false
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                return `${context.dataset.label}: ${context.parsed.y.toLocaleString()} 人`;
+                            }
+                        }
+                    }
+                }
+            }
+        });
+
+        const reasonData = {
+            teacher: {
+                labels: ['無気力、不安', 'いじめを除く友人関係', '生活リズムの乱れ', '学業の不振', 'いじめ'],
+                values: [51.9, 12.3, 11.4, 4.7, 0.2]
+            },
+            student: {
+                labels: ['無気力、不安', 'いじめを除く友人関係', '生活リズムの乱れ', 'いじめ', '先生と合わなかった'],
+                values: [49.7, 26.6, 26.5, 26.2, 23.9]
+            }
+        };
+
+        const reasonChartConfig = {
+            type: 'bar',
+            data: {
+                labels: reasonData.teacher.labels,
+                datasets: [{
+                    label: '回答率 (%)',
+                    data: reasonData.teacher.values,
+                    backgroundColor: 'rgba(59, 130, 246, 0.6)',
+                    borderColor: 'rgba(59, 130, 246, 1)',
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                indexAxis: 'y',
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    x: {
+                        beginAtZero: true,
+                        max: 60
+                    }
+                },
+                plugins: {
+                    legend: {
+                        display: false
+                    },
+                    title: {
+                        display: true,
+                        text: '教師が考える不登校の要因'
+                    }
+                }
+            }
+        };
+
+        const reasonChart = new Chart(document.getElementById('reasonGapChart'), reasonChartConfig);
+
+        const teacherBtn = document.getElementById('view-teacher');
+        const studentBtn = document.getElementById('view-student');
+
+        function updateReasonChart(view) {
+            const data = reasonData[view];
+            reasonChart.data.labels = data.labels;
+            reasonChart.data.datasets[0].data = data.values;
+            reasonChart.options.plugins.title.text = view === 'teacher' ? '教師が考える不登校の要因' : '生徒が挙げる不登校の要因';
+            reasonChart.update();
+
+            if(view === 'teacher') {
+                teacherBtn.classList.add('bg-blue-500', 'text-white');
+                teacherBtn.classList.remove('bg-white', 'text-gray-700');
+                studentBtn.classList.add('bg-white', 'text-gray-700');
+                studentBtn.classList.remove('bg-blue-500', 'text-white');
+            } else {
+                studentBtn.classList.add('bg-blue-500', 'text-white');
+                studentBtn.classList.remove('bg-white', 'text-gray-700');
+                teacherBtn.classList.add('bg-white', 'text-gray-700');
+                teacherBtn.classList.remove('bg-blue-500', 'text-white');
+            }
+        }
+
+        teacherBtn.addEventListener('click', () => updateReasonChart('teacher'));
+        studentBtn.addEventListener('click', () => updateReasonChart('student'));
+
+
+        const accordionButtons = document.querySelectorAll('.feature-accordion-button');
+        accordionButtons.forEach(button => {
+            button.addEventListener('click', () => {
+                const isExpanded = button.getAttribute('aria-expanded') === 'true';
+                button.setAttribute('aria-expanded', !isExpanded);
+                const targetBody = document.querySelector(button.getAttribute('data-accordion-target'));
+                targetBody.classList.toggle('hidden');
+                const icon = button.querySelector('[data-accordion-icon]');
+                icon.classList.toggle('rotate-180');
+            });
+        });
+
+        const faders = document.querySelectorAll('.fade-in');
+        const observerOptions = {
+            root: null,
+            rootMargin: "0px",
+            threshold: 0.1
+        };
+        const faderObserver = new IntersectionObserver((entries, observer) => {
+            entries.forEach(entry => {
+                if (!entry.isIntersecting) {
+                    return;
+                }
+                entry.target.classList.add('visible');
+                observer.unobserve(entry.target);
+            });
+        }, observerOptions);
+
+        faders.forEach(fader => {
+            faderObserver.observe(fader);
+        });
+
+        const sections = document.querySelectorAll('section');
+        const navLinks = document.querySelectorAll('.nav-link');
+        const navObserver = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    navLinks.forEach(link => {
+                        link.classList.toggle('active', link.getAttribute('href').split('#')[1] === entry.target.id);
+                    });
+                }
+            });
+        }, { threshold: 0.5 });
+
+        sections.forEach(section => {
+            navObserver.observe(section);
+        });
+    });
+</script>
+</body>
+</html>
